@@ -1,6 +1,6 @@
 export type CallbackFN = (deltaTimeMS: number) => void;
 
-export class GameLoop {
+export class AnimationLoop {
   private update: CallbackFN;
   private paused: boolean = false;
   private static tickLengthMs: number = 1000 / 60;
@@ -13,7 +13,7 @@ export class GameLoop {
   public start = () => {
     if (this.isPaused() || !this.intervalID){
       this.paused = false;
-      this.intervalID = setInterval(this.gameLoop, GameLoop.tickLengthMs);
+      this.intervalID = setInterval(this.gameLoop, AnimationLoop.tickLengthMs);
     }
   }
   
@@ -42,6 +42,6 @@ export class GameLoop {
       return;
     }
     
-    this.update(GameLoop.tickLengthMs);
+    this.update(AnimationLoop.tickLengthMs);
   }
 }
