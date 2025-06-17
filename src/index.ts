@@ -1,14 +1,10 @@
-import { AnimationLoop } from './AnimationLoop';
-import { Emitter } from './Emitter';
+import { AnimationLoop } from './animation/AnimationLoop';
+import { getCanvas, getCanvasContext } from './Context';
+import { Ray } from './Ray';
+import { LineSegment } from './types';
 
-const canvas = document.getElementById('myCanvas') as HTMLCanvasElement;
-if (!canvas){
-  throw new Error("Cannot get canvas");
-}
-const ctx = canvas.getContext('2d');
-if (!ctx) {
-  throw new Error("Cannot get canvas context");
-}
+const canvas = getCanvas("myCanvas");
+const context = getCanvasContext(canvas);
 
 const resizeCanvas = () => {
   canvas.width = window.innerWidth;
@@ -16,38 +12,50 @@ const resizeCanvas = () => {
 };
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
-let circleRadius = 5;
-const minCircleRadius = 5;
-const maxCircleRadius = 300;
 
-const emitters: Emitter[] = [];
+const rays: Ray[] = [];
 for (let i = 0; i < 10; i++) {
-  emitters.push(new Emitter(
-    {
-      x: canvas.width / 2,
-      y: canvas.height / 2 + i * 5 - 25, // Staggered vertical positions
-    }, {
-      r: 0,
-      g: 0,
-      b: 255,
-      a: 1, // Blue color with full opacity
-    },
-    0,
-    Math.PI / 4
-  ));
+  const x1 = 200;
+  const y1 = 200;
+  const x2 = 300;;
+  const y2 = 200 + i * 10;
+  const color = {
+    r: 255,
+    g: 0,
+    b: 0,
+    a: 1,
+  };
+  rays.push(new Ray({
+    x1,
+    y1,
+    x2,
+    y2,
+  }, color, 0, 1));
 }
 
+const reflector: LineSegment = {
+  x1: 100,
+  y1: 100,
+  x2: 400,
+  y2: 400,
+};
+
+const reflectedRays: Ray[] = rays.flatMap(ray => ray.reflect(reflector));
+
+let t = 0;
+const tMax = 1;
+const tStep = 60 / 1000; // 60 FPS, one second loop
+
 const animationLoop = new AnimationLoop((deltaTimeMs: number) => {
-  circleRadius += deltaTimeMs * 0.1; // Increase radius over time
-  if (circleRadius > maxCircleRadius) {
-    circleRadius = minCircleRadius; // Reset radius if it exceeds max
+  context.fillStyle = 'lightblue';
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  t += deltaTimeMs / 1000; // Convert ms to seconds
+  if (t > tMax) {
+    t = 0; // Reset time after one loop
   }
 
-  ctx!.fillStyle = 'lightblue';
-  ctx!.fillRect(0, 0, canvas.width, canvas.height);
-
-  for (const emitter of emitters) {
-    emitter.draw(ctx!, circleRadius);
+  for (const ray of reflectedRays) {
+    ray.render(context, t);
   }
 });
 
