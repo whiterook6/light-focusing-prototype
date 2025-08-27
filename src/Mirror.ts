@@ -1,4 +1,6 @@
-import { Normal, Point, Ray } from "./types";
+import { Ray } from "./Ray";
+import { Normal, Point } from "./types";
+
 
 export class Mirror {
   position: Point;
@@ -77,15 +79,33 @@ export class Mirror {
     const ix = x1 + t * segDx;
     const iy = y1 + t * segDy;
 
+    // Mirror direction vector (already normalized in render)
+    const mirrorDirLen = Math.hypot(D.dx, D.dy);
+    const dirX = D.dx / mirrorDirLen;
+    const dirY = D.dy / mirrorDirLen;
+
+    // Vector from mirror center to intersection
+    const vix = ix - M.x;
+    const viy = iy - M.y;
+
+    // Project onto mirror direction
+    const proj = vix * dirX + viy * dirY;
+
+    // Check if within mirror bounds
+    if (proj < -this.length / 2 || proj > this.length / 2) {
+      // Intersection is outside the mirror segment
+      return [ray];
+    }
+
     // Before intersection
-    const before: Ray = {
+    const before = new Ray(
       x1,
       y1,
-      x2: ix,
-      y2: iy,
-      t1: ray.t1,
-      t2: ray.t1 + t * (ray.t2 - ray.t1),
-    };
+      ix,
+      iy,
+      ray.t1,
+      ray.t1 + t * (ray.t2 - ray.t1),
+    );
 
     // After intersection: reflect (ix,iy)-(x2,y2) about mirror normal
     // Compute incident vector
@@ -99,14 +119,14 @@ export class Mirror {
     const rx = incident.dx - 2 * dot * nx;
     const ry = incident.dy - 2 * dot * ny;
 
-    const after: Ray = {
-      x1: ix,
-      y1: iy,
-      x2: ix + rx,
-      y2: iy + ry,
-      t1: ray.t1 + t * (ray.t2 - ray.t1),
-      t2: ray.t2
-    };
+    const after = new Ray(
+      ix,
+      iy,
+      ix + rx,
+      iy + ry,
+      ray.t1 + t * (ray.t2 - ray.t1),
+      ray.t2
+    );
 
     return [before, after];
   }

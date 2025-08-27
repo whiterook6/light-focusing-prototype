@@ -36,7 +36,19 @@ export class AnimationLoop {
   public isPaused = (): boolean => {
     return this.paused;
   }
-  
+
+  public step = (): void => {
+    if (this.isPaused()){
+      this.update(AnimationLoop.tickLengthMs);
+    }
+  };
+
+  public stepBack = () => {
+    if (this.isPaused()){
+      this.update(-AnimationLoop.tickLengthMs);
+    }
+  }
+
   public gameLoop = (): void => {
     if (this.isPaused()){
       return;
