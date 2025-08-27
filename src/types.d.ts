@@ -20,4 +20,13 @@ export type LineSegment = {
 export type Normal = {
   dx: number; // x component of the normal vector
   dy: number; // y component of the normal vector
-}
+};
+
+export type Ray = {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  t1: number;
+  t2: number;
+};
