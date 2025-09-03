@@ -1,13 +1,16 @@
 import { Ray } from "./Ray";
-import { Normal, Point } from "./types";
+import { Normal, Point } from "../types";
+import { UniqueID } from "../UniqueID";
 
 
-export class Mirror {
+export class FlatMirror {
+  id: number;
   position: Point;
   normal: Normal;
   length: number; // half width on either side of the center point
 
   constructor({position, normal, length}: {position: Point, normal: Normal, length: number}){
+    this.id = UniqueID.getNextID();
     this.position = position;
     this.normal = normal;
     this.length = length;
@@ -37,14 +40,18 @@ export class Mirror {
 
   /**
    * Splits a line segment by a mirror and returns the before and after (reflected) segments.
-   * If no intersection, returns the original segment.
+   * If no intersection, it returns an empty array
    */
   public splitAndReflectSegment(
     ray: Ray
   ): Ray[] {
     // Mirror line: point M (mirror.position), direction D (perpendicular to mirror.normal)
-    const { x1, y1, x2, y2 } = ray;
-    debugger;
+    const { x1, y1, x2, y2, timeRange, spawnedByObjectID, hitObjectID } = ray;
+    if (this.id === hitObjectID || this.id === spawnedByObjectID) {
+      return [];
+    }
+
+
     const M = this.position;
     // Mirror direction vector (perpendicular to normal)
     const D = { dx: -this.normal.dy, dy: this.normal.dx };
@@ -103,8 +110,10 @@ export class Mirror {
       y1,
       ix,
       iy,
-      ray.t1,
-      ray.t1 + t * (ray.t2 - ray.t1),
+      timeRange.start,
+      timeRange.start + t * (timeRange.end - timeRange.start),
+      spawnedByObjectID,
+      this.id
     );
 
     // After intersection: reflect (ix,iy)-(x2,y2) about mirror normal
@@ -124,8 +133,10 @@ export class Mirror {
       iy,
       ix + rx,
       iy + ry,
-      ray.t1 + t * (ray.t2 - ray.t1),
-      ray.t2
+      timeRange.start + t * (timeRange.end - timeRange.start),
+      timeRange.end,
+      this.id,
+      null
     );
 
     return [before, after];

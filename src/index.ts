@@ -1,15 +1,20 @@
 import { AnimationLoop } from './animation/AnimationLoop';
 import { getCanvas, getCanvasContext } from './Context';
-import { Mirror } from './Mirror';
-import { Ray } from './Ray';
+import { VectorGizmo } from './gizmos/VectorGizmo';
+import { FlatMirror } from './raytracing/FlatMirror';
+import { Ray, TimeRange } from './raytracing/Ray';
 
 
 const canvas = getCanvas("myCanvas");
 const context = getCanvasContext(canvas);
 
 const resizeCanvas = () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
+  canvas.style.width = window.innerWidth + 'px';
+  canvas.style.height = window.innerHeight + 'px';
+  context.setTransform(dpr, 0, 0, dpr, 0, 0); // scale all drawing
 };
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
@@ -18,10 +23,10 @@ let t = 0;
 const tMax = 1;
 const tSpread = 0.05; // draw 1/20th on either side of the T point
 
-const rays: Ray[] = Array.from({ length: 100 }, (_, i) => {
+let rays: Ray[] = Array.from({ length: 100 }, (_, i) => {
   const angle = ((i / 100) * 2 * Math.PI); // Spread rays evenly in a circle
-  const x1 = canvas.width / 2;
-  const y1 = canvas.height / 2;
+  const x1 = (canvas.width / window.devicePixelRatio) / 2;
+  const y1 = (canvas.height / window.devicePixelRatio) / 2;
   const x2 = x1 + Math.cos(angle) * 500;
   const y2 = y1 + Math.sin(angle) * 500;
   return new Ray(
@@ -34,13 +39,36 @@ const rays: Ray[] = Array.from({ length: 100 }, (_, i) => {
   );
 });
 
-const mirror = new Mirror({
-  position: {x: canvas.width / 2, y: canvas.height / 3},
-  normal: {dx: Math.cos(12), dy: Math.sin(12)},
-  length: 200
-});
+const mirrors: FlatMirror[] = [
+  new FlatMirror({
+    position: { x: (canvas.width / window.devicePixelRatio) / 2, y: (canvas.height / window.devicePixelRatio) / 3 },
+    normal: { dx: Math.cos(12), dy: Math.sin(12) },
+    length: 200
+  }),
+  new FlatMirror({
+    position: { x: (canvas.width / window.devicePixelRatio) / 2 - 100, y: (canvas.height / window.devicePixelRatio) / 3 },
+    normal: { dx: Math.cos(12), dy: Math.sin(12) },
+    length: 200
+  }),
+];
 
-const reflectedRays = rays.flatMap(ray => mirror.splitAndReflectSegment(ray));
+const gizmo = new VectorGizmo(canvas);
+
+let anyBounced = true;
+for (let i = 0; i < 10 && anyBounced; i++) {
+  anyBounced = false;
+  for (const mirror of mirrors) {
+    rays = rays.flatMap(ray => {
+      const newRaysFromThisMirror = mirror.splitAndReflectSegment(ray);
+      if (newRaysFromThisMirror.length > 0) {
+        anyBounced = true;
+        return newRaysFromThisMirror;
+      } else {
+        return [ray];
+      }
+    });
+  }
+}
 
 const animationLoop = new AnimationLoop((deltaTimeMs: number) => {
   context.fillStyle = 'lightblue';
@@ -52,15 +80,18 @@ const animationLoop = new AnimationLoop((deltaTimeMs: number) => {
     t = tMax + tSpread; // Reset time after one loop
   }
 
-  const t1 = Math.max(0, t - tSpread);
-  const t2 = Math.min(1, t + tSpread);
+  const renderRange: TimeRange = { start: t - tSpread, end: t + tSpread };
   context.strokeStyle = 'red';
 
-  for (const ray of reflectedRays){
-    ray.render(context, t1);
+  for (const ray of rays){
+    ray.render(context, renderRange);
   }
 
-  mirror.render(context);
+  for (const mirror of mirrors){
+    mirror.render(context);
+  }
+
+  gizmo.render(context);
 });
 
 window.addEventListener('keydown', (event) => {
