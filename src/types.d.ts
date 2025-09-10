@@ -21,3 +21,8 @@ export type Normal = {
   dx: number; // x component of the normal vector
   dy: number; // y component of the normal vector
 };
+
+export type TimeRange = {
+  start: number;
+  end: number;
+};

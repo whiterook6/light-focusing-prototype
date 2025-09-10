@@ -2,7 +2,8 @@ import { AnimationLoop } from './animation/AnimationLoop';
 import { getCanvas, getCanvasContext } from './Context';
 import { VectorGizmo } from './gizmos/VectorGizmo';
 import { FlatMirror } from './raytracing/FlatMirror';
-import { Ray, TimeRange } from './raytracing/Ray';
+import { Ray } from './raytracing/Ray';
+import { TimeRange } from './types';
 
 
 const canvas = getCanvas("myCanvas");
@@ -27,16 +28,12 @@ let rays: Ray[] = Array.from({ length: 100 }, (_, i) => {
   const angle = ((i / 100) * 2 * Math.PI); // Spread rays evenly in a circle
   const x1 = (canvas.width / window.devicePixelRatio) / 2;
   const y1 = (canvas.height / window.devicePixelRatio) / 2;
-  const x2 = x1 + Math.cos(angle) * 500;
-  const y2 = y1 + Math.sin(angle) * 500;
-  return new Ray(
-    x1,
-    y1,
-    x2,
-    y2,
-    0,
-    1
-  );
+  return new Ray({
+    origin: { x: x1, y: y1 },
+    direction: angle,
+    length: 500,
+    timeRange: { start: 0, end: tMax }
+  });
 });
 
 const mirrors: FlatMirror[] = [

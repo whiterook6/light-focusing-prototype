@@ -1,56 +1,33 @@
 import { Ray } from "./Ray";
 import { Normal, Point } from "../types";
-import { UniqueID } from "../UniqueID";
+import { Mirror } from "./Mirror";
 
-
-export class FlatMirror {
-  id: number;
+export class FlatMirror extends Mirror {
   position: Point;
   normal: Normal;
   length: number; // half width on either side of the center point
 
   constructor({position, normal, length}: {position: Point, normal: Normal, length: number}){
-    this.id = UniqueID.getNextID();
+    super();
     this.position = position;
     this.normal = normal;
     this.length = length;
   }
 
-  render(context: CanvasRenderingContext2D){
-    // Perpendicular direction to normal
-    const perpDx = -this.normal.dy;
-    const perpDy = this.normal.dx;
-    // Normalize
-    const len = Math.hypot(perpDx, perpDy);
-    const dirX = perpDx / len;
-    const dirY = perpDy / len;
-
-    const halfLen = this.length / 2;
-    const x1 = this.position.x - dirX * halfLen;
-    const y1 = this.position.y - dirY * halfLen;
-    const x2 = this.position.x + dirX * halfLen;
-    const y2 = this.position.y + dirY * halfLen;
-
-    context.strokeStyle = "darkblue";
-    context.beginPath();
-    context.moveTo(x1, y1);
-    context.lineTo(x2, y2);
-    context.stroke();
-  }
-
-  /**
-   * Splits a line segment by a mirror and returns the before and after (reflected) segments.
-   * If no intersection, it returns an empty array
-   */
   public splitAndReflectSegment(
     ray: Ray
   ): Ray[] {
     // Mirror line: point M (mirror.position), direction D (perpendicular to mirror.normal)
-    const { x1, y1, x2, y2, timeRange, spawnedByObjectID, hitObjectID } = ray;
+    const { origin, direction, length, timeRange, spawnedByObjectID, hitObjectID } = ray;
     if (this.id === hitObjectID || this.id === spawnedByObjectID) {
       return [];
     }
 
+    // Compute segment endpoints
+    const x1 = origin.x;
+    const y1 = origin.y;
+    const x2 = origin.x + Math.cos(direction) * length;
+    const y2 = origin.y + Math.sin(direction) * length;
 
     const M = this.position;
     // Mirror direction vector (perpendicular to normal)
@@ -105,16 +82,16 @@ export class FlatMirror {
     }
 
     // Before intersection
-    const before = new Ray(
-      x1,
-      y1,
-      ix,
-      iy,
-      timeRange.start,
-      timeRange.start + t * (timeRange.end - timeRange.start),
+    const beforeLength = Math.hypot(ix - x1, iy - y1);
+    const beforeDirection = Math.atan2(iy - y1, ix - x1);
+    const before = new Ray({
+      origin: { x: x1, y: y1 },
+      direction: beforeDirection,
+      length: beforeLength,
+      timeRange: { start: timeRange.start, end: timeRange.start + t * (timeRange.end - timeRange.start) },
       spawnedByObjectID,
-      this.id
-    );
+      hitObjectID: this.id
+    });
 
     // After intersection: reflect (ix,iy)-(x2,y2) about mirror normal
     // Compute incident vector
@@ -128,17 +105,38 @@ export class FlatMirror {
     const rx = incident.dx - 2 * dot * nx;
     const ry = incident.dy - 2 * dot * ny;
 
-    const after = new Ray(
-      ix,
-      iy,
-      ix + rx,
-      iy + ry,
-      timeRange.start + t * (timeRange.end - timeRange.start),
-      timeRange.end,
-      this.id,
-      null
-    );
+    const afterLength = Math.hypot(rx, ry);
+    const afterDirection = Math.atan2(ry, rx);
+    const after = new Ray({
+      origin: { x: ix, y: iy },
+      direction: afterDirection,
+      length: afterLength,
+      timeRange: { start: timeRange.start + t * (timeRange.end - timeRange.start), end: timeRange.end },
+      spawnedByObjectID: this.id
+    });
 
     return [before, after];
+  }
+
+  render(context: CanvasRenderingContext2D){
+    // Perpendicular direction to normal
+    const perpDx = -this.normal.dy;
+    const perpDy = this.normal.dx;
+    // Normalize
+    const len = Math.hypot(perpDx, perpDy);
+    const dirX = perpDx / len;
+    const dirY = perpDy / len;
+
+    const halfLen = this.length / 2;
+    const x1 = this.position.x - dirX * halfLen;
+    const y1 = this.position.y - dirY * halfLen;
+    const x2 = this.position.x + dirX * halfLen;
+    const y2 = this.position.y + dirY * halfLen;
+
+    context.strokeStyle = "darkblue";
+    context.beginPath();
+    context.moveTo(x1, y1);
+    context.lineTo(x2, y2);
+    context.stroke();
   }
 }

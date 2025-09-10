@@ -1,36 +1,30 @@
+import { TimeRange } from "../types";
+import { ID } from "../UniqueID";
 
-export type TimeRange = {
-  start: number;
-  end: number;
-};
+interface Args {
+  origin: { x: number; y: number };
+  direction: number;
+  length: number;
+  timeRange: TimeRange;
+  spawnedByObjectID?: ID;
+  hitObjectID?: ID;
+}
 
 export class Ray {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  id: number;
+  origin: { x: number; y: number };
+  direction: number;
+  length: number;
   timeRange: TimeRange;
-  spawnedByObjectID: string | number | null;
-  hitObjectID: string | number | null;
+  spawnedByObjectID?: ID;
+  hitObjectID?: ID;
 
-  constructor(
-    x1: number,
-    y1: number,
-    x2: number,
-    y2: number,
-    startT: number,
-    endT: number,
-    spawnedByObjectID: string | number | null = null,
-    hitObjectID: string | number | null = null
-  ) {
-    this.x1 = x1;
-    this.y1 = y1;
-    this.x2 = x2;
-    this.y2 = y2;
-    this.timeRange = { start: startT, end: endT };
-    this.spawnedByObjectID = spawnedByObjectID;
-    this.hitObjectID = hitObjectID;
+  constructor(args: Args) {
+    this.origin = args.origin;
+    this.direction = args.direction;
+    this.length = args.length;
+    this.timeRange = args.timeRange;
+    this.spawnedByObjectID = args.spawnedByObjectID;
+    this.hitObjectID = args.hitObjectID;
   }
 
   private lerpT = (t: number) => (t - this.timeRange.start) / (this.timeRange.end - this.timeRange.start);
@@ -46,10 +40,10 @@ export class Ray {
     const segEndT = Math.min(this.timeRange.end, renderRange.end);
     const startT = this.lerpT(segStartT);
     const endT = this.lerpT(segEndT);
-    const xStart = this.x1 + (this.x2 - this.x1) * startT;
-    const yStart = this.y1 + (this.y2 - this.y1) * startT;
-    const xEnd = this.x1 + (this.x2 - this.x1) * endT;
-    const yEnd = this.y1 + (this.y2 - this.y1) * endT;
+    const xStart = this.origin.x + Math.cos(this.direction) * startT * this.length;
+    const yStart = this.origin.y + Math.sin(this.direction) * startT * this.length;
+    const xEnd = this.origin.x + Math.cos(this.direction) * endT * this.length;
+    const yEnd = this.origin.y + Math.sin(this.direction) * endT * this.length;
     return { xStart, yStart, xEnd, yEnd };
   }
 

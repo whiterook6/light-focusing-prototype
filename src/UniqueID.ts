@@ -1,6 +1,8 @@
+export type ID = number;
+
 export const UniqueID = {
   currentID: 0,
-  getNextID: function() {
+  getNextID: function(): ID {
     return this.currentID++;
   }
 }
