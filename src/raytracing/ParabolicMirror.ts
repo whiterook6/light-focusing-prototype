@@ -113,7 +113,7 @@ export class ParabolicMirror extends Mirror {
    */
   private getNormal(x: number): { dx: number; dy: number } {
     const slope = this.getDerivative(x);
-    
+
     // For a parabola y = ax², the normal vector perpendicular to tangent is (-slope, 1)
     // But we need to ensure it points toward the focus (inside the parabola)
     // The focus is at (0, 1/(4a)) in local coordinates
@@ -124,19 +124,19 @@ export class ParabolicMirror extends Mirror {
     const length = Math.hypot(normalX, normalY);
     const normalizedX = normalX / length;
     const normalizedY = normalY / length;
-    
+
     // Check if the normal points toward the focus
     // Focus is at (0, 1/(4a)) = (0, focalLength)
     const focalLength = 1 / (4 * this.a);
     const pointY = this.getY(x);
-    
+
     // Vector from point to focus
     const toFocusX = 0 - x;
     const toFocusY = focalLength - pointY;
-    
+
     // Dot product of normal with vector to focus
     const dot = normalizedX * toFocusX + normalizedY * toFocusY;
-    
+
     // If dot product is negative, flip the normal
     if (dot < 0) {
       return {
@@ -144,7 +144,7 @@ export class ParabolicMirror extends Mirror {
         dy: -normalizedY,
       };
     }
-    
+
     return {
       dx: normalizedX,
       dy: normalizedY,

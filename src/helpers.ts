@@ -32,7 +32,7 @@ export const Direction = {
   DOWN: 0,
   LEFT: Math.PI * 0.5,
   RIGHT: Math.PI * 1.5,
-  
+
   /**
    * Convert a standard mathematical angle to screen-oriented direction
    * @param angle - Angle in radians where right = 0, counterclockwise is positive
@@ -42,18 +42,18 @@ export const Direction = {
     // Screen coordinates have Y flipped compared to mathematical coordinates
     // Standard math: right=0, up=π/2, left=π, down=3π/2
     // Screen: right=0, down=π/2, left=π, up=3π/2
-    
+
     // To convert from math to screen coordinates:
     // - Keep the same X component (cos)
     // - Flip the Y component (sin becomes -sin)
     // This means: new_angle = atan2(-sin(angle), cos(angle))
     // Which simplifies to: new_angle = -angle
-    
+
     // But we need to normalize to [0, 2π)
     let screenAngle = -angle;
     while (screenAngle < 0) screenAngle += 2 * Math.PI;
     while (screenAngle >= 2 * Math.PI) screenAngle -= 2 * Math.PI;
-    
+
     return screenAngle;
-  }
+  },
 };

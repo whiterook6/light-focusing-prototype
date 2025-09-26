@@ -86,6 +86,7 @@ export class FlatMirror extends Mirror {
       beforeDirection,
       beforeLength,
       { start: timeRange.start, end: timeRange.start + t * (timeRange.end - timeRange.start) },
+      "red", // color
       spawnedByObjectID,
       this.id,
     );
@@ -109,6 +110,7 @@ export class FlatMirror extends Mirror {
       afterDirection,
       afterLength,
       { start: timeRange.start + t * (timeRange.end - timeRange.start), end: timeRange.end },
+      "red", // color
       this.id,
     );
 

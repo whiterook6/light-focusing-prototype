@@ -9,6 +9,8 @@
     "start": "node output/index.js",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
     "lint:fix": "yarn lint --fix",
+    "type-check": "tsc --noEmit",
+    "check": "yarn lint && yarn type-check",
     "format": "prettier --write \"**/*.{js,ts,tsx,json,md,html,css}\"",
     "format:check": "prettier --check \"**/*.{js,ts,tsx,json,md,html,css}\""
   },

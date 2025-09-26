@@ -1,10 +1,10 @@
 export abstract class Renderable {
-  update: (
+  abstract update: (
     /** How long since the previous update */
     deltaTimeMs: number,
   ) => void;
 
-  render: (
+  abstract render: (
     context: CanvasRenderingContext2D,
 
     /** a looping value, for timed animations */
