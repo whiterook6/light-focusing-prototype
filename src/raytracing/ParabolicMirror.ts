@@ -311,6 +311,19 @@ export class ParabolicMirror extends Mirror {
     return [before, after];
   }
 
+  public distanceToIntersection(ray: Ray): number {
+    const { spawnedByObjectID, hitObjectID, length } = ray;
+    if (this.id === hitObjectID || this.id === spawnedByObjectID) {
+      return Infinity;
+    }
+
+    const intersection = this.findIntersection(ray);
+    if (!intersection) {
+      return Infinity;
+    }
+    return intersection.tFraction * length;
+  }
+
   render(context: CanvasRenderingContext2D) {
     context.strokeStyle = "darkgreen";
     context.lineWidth = 2;

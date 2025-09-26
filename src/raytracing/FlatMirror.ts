@@ -86,7 +86,7 @@ export class FlatMirror extends Mirror {
       beforeDirection,
       beforeLength,
       { start: timeRange.start, end: timeRange.start + t * (timeRange.end - timeRange.start) },
-      "red", // color
+      ray.color,
       spawnedByObjectID,
       this.id,
     );
@@ -110,11 +110,53 @@ export class FlatMirror extends Mirror {
       afterDirection,
       afterLength,
       { start: timeRange.start + t * (timeRange.end - timeRange.start), end: timeRange.end },
-      "red", // color
+      ray.color,
       this.id,
     );
 
     return [before, after];
+  }
+
+  public distanceToIntersection(ray: Ray): number {
+    const { origin, direction, length, spawnedByObjectID, hitObjectID } = ray;
+    if (this.id === hitObjectID || this.id === spawnedByObjectID) {
+      return Infinity;
+    }
+
+    const x1 = origin.x;
+    const y1 = origin.y;
+    const x2 = origin.x + Math.cos(direction) * length;
+    const y2 = origin.y + Math.sin(direction) * length;
+
+    const M = this.position;
+    const D = { dx: -this.normal.dy, dy: this.normal.dx };
+
+    const segDx = x2 - x1;
+    const segDy = y2 - y1;
+    const det = segDx * D.dy - segDy * D.dx;
+    if (Math.abs(det) < 1e-8) {
+      return Infinity;
+    }
+
+    const t = ((M.x - x1) * D.dy - (M.y - y1) * D.dx) / det;
+    if (t < 0 || t > 1) {
+      return Infinity;
+    }
+
+    const ix = x1 + t * segDx;
+    const iy = y1 + t * segDy;
+
+    const mirrorDirLen = Math.hypot(D.dx, D.dy);
+    const dirX = D.dx / mirrorDirLen;
+    const dirY = D.dy / mirrorDirLen;
+    const vix = ix - M.x;
+    const viy = iy - M.y;
+    const proj = vix * dirX + viy * dirY;
+    if (proj < -this.length / 2 || proj > this.length / 2) {
+      return Infinity;
+    }
+
+    return t * length;
   }
 
   render(context: CanvasRenderingContext2D) {
