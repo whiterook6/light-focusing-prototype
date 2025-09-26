@@ -17,7 +17,7 @@ export class PositionGizmo {
     };
   };
 
-  handleMouseDown = (event: MouseEvent) => {
+  handleMouseDown = (_event: MouseEvent) => {
     if (this.currentPos) {
       this.pinned.push({ ...this.currentPos });
     }

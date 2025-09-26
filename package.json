@@ -1,6 +1,7 @@
 {
   "name": "light-focusing-prototype",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
     "dev:build": "node build/dev-build.mjs",
     "dev:watch": "node build/dev-watch.mjs",

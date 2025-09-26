@@ -32,7 +32,7 @@ export class VectorGizmo {
     };
   };
 
-  handleMouseUp = (event: MouseEvent) => {
+  handleMouseUp = (_event: MouseEvent) => {
     if (!this.isDrawing || !this.startPos || !this.currentPos) return;
     this.lines.push({
       x1: this.startPos.x,
