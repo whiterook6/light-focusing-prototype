@@ -28,12 +28,12 @@ let rays: Ray[] = Array.from({ length: 100 }, (_, i) => {
   const angle = ((i / 100) * 2 * Math.PI); // Spread rays evenly in a circle
   const x1 = (canvas.width / window.devicePixelRatio) / 2;
   const y1 = (canvas.height / window.devicePixelRatio) / 2;
-  return new Ray({
-    origin: { x: x1, y: y1 },
-    direction: angle,
-    length: 500,
-    timeRange: { start: 0, end: tMax }
-  });
+  return new Ray(
+    { x: x1, y: y1 },
+    angle,
+    500,
+    { start: 0, end: tMax }
+  );
 });
 
 const mirrors: FlatMirror[] = [

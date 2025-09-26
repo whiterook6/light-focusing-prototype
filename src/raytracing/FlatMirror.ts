@@ -84,14 +84,14 @@ export class FlatMirror extends Mirror {
     // Before intersection
     const beforeLength = Math.hypot(ix - x1, iy - y1);
     const beforeDirection = Math.atan2(iy - y1, ix - x1);
-    const before = new Ray({
-      origin: { x: x1, y: y1 },
-      direction: beforeDirection,
-      length: beforeLength,
-      timeRange: { start: timeRange.start, end: timeRange.start + t * (timeRange.end - timeRange.start) },
+    const before = new Ray(
+      { x: x1, y: y1 },
+      beforeDirection,
+      beforeLength,
+      { start: timeRange.start, end: timeRange.start + t * (timeRange.end - timeRange.start) },
       spawnedByObjectID,
-      hitObjectID: this.id
-    });
+      this.id
+    );
 
     // After intersection: reflect (ix,iy)-(x2,y2) about mirror normal
     // Compute incident vector
@@ -107,13 +107,13 @@ export class FlatMirror extends Mirror {
 
     const afterLength = Math.hypot(rx, ry);
     const afterDirection = Math.atan2(ry, rx);
-    const after = new Ray({
-      origin: { x: ix, y: iy },
-      direction: afterDirection,
-      length: afterLength,
-      timeRange: { start: timeRange.start + t * (timeRange.end - timeRange.start), end: timeRange.end },
-      spawnedByObjectID: this.id
-    });
+    const after = new Ray(
+      { x: ix, y: iy },
+      afterDirection,
+      afterLength,
+      { start: timeRange.start + t * (timeRange.end - timeRange.start), end: timeRange.end },
+      this.id
+    );
 
     return [before, after];
   }

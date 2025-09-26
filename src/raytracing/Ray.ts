@@ -1,31 +1,15 @@
 import { TimeRange } from "../types";
 import { ID } from "../UniqueID";
 
-interface Args {
-  origin: { x: number; y: number };
-  direction: number;
-  length: number;
-  timeRange: TimeRange;
-  spawnedByObjectID?: ID;
-  hitObjectID?: ID;
-}
-
 export class Ray {
-  origin: { x: number; y: number };
-  direction: number;
-  length: number;
-  timeRange: TimeRange;
-  spawnedByObjectID?: ID;
-  hitObjectID?: ID;
-
-  constructor(args: Args) {
-    this.origin = args.origin;
-    this.direction = args.direction;
-    this.length = args.length;
-    this.timeRange = args.timeRange;
-    this.spawnedByObjectID = args.spawnedByObjectID;
-    this.hitObjectID = args.hitObjectID;
-  }
+  constructor(
+    public origin: { x: number; y: number },
+    public direction: number,
+    public length: number,
+    public timeRange: TimeRange,
+    public spawnedByObjectID?: ID,
+    public hitObjectID?: ID
+  ) {}
 
   private lerpT = (t: number) => (t - this.timeRange.start) / (this.timeRange.end - this.timeRange.start);
 
