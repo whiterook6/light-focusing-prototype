@@ -255,6 +255,7 @@ export class ParabolicMirror extends Mirror {
       return [ray]; // No intersection
     }
 
+    debugger;
     const { x: ix, y: iy, tFraction } = intersection;
 
     // Create ray segment before intersection
