@@ -134,46 +134,6 @@ window.addEventListener("keydown", (event) => {
     animationLoop.step();
   } else if (event.code === "Comma") {
     animationLoop.stepBack();
-  } else if (event.code === "ArrowLeft") {
-    // Rotate mirror counter-clockwise
-    parabolicMirror.orientation -= Math.PI / 36; // 5 degrees
-    // Regenerate rays to see the effect
-    rays = [...pointEmitter.generateRays(), ...linearEmitter.generateRays()];
-    let anyBounced = true;
-    for (let i = 0; i < 10 && anyBounced; i++) {
-      anyBounced = false;
-      for (const mirror of mirrors) {
-        rays = rays.flatMap((ray) => {
-          const newRaysFromThisMirror = mirror.splitAndReflectSegment(ray);
-          if (newRaysFromThisMirror.length > 0) {
-            anyBounced = true;
-            return newRaysFromThisMirror;
-          } else {
-            return [ray];
-          }
-        });
-      }
-    }
-  } else if (event.code === "ArrowRight") {
-    // Rotate mirror clockwise
-    parabolicMirror.orientation += Math.PI / 36; // 5 degrees
-    // Regenerate rays to see the effect
-    rays = [...pointEmitter.generateRays(), ...linearEmitter.generateRays()];
-    let anyBounced = true;
-    for (let i = 0; i < 10 && anyBounced; i++) {
-      anyBounced = false;
-      for (const mirror of mirrors) {
-        rays = rays.flatMap((ray) => {
-          const newRaysFromThisMirror = mirror.splitAndReflectSegment(ray);
-          if (newRaysFromThisMirror.length > 0) {
-            anyBounced = true;
-            return newRaysFromThisMirror;
-          } else {
-            return [ray];
-          }
-        });
-      }
-    }
   }
 });
 
