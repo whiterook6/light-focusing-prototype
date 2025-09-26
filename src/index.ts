@@ -7,6 +7,7 @@ import { Ray } from "./raytracing/Ray";
 import { PointEmitter } from "./raytracing/PointEmitter";
 import { LinearEmitter } from "./raytracing/LinearEmitter";
 import { TimeRange } from "./types";
+import { Grid } from "./Grid";
 
 const canvas = getCanvas("myCanvas");
 const context = getCanvasContext(canvas);
@@ -83,6 +84,14 @@ const mirrors: Mirror[] = [
 
 const gizmo = new VectorGizmo(canvas);
 
+// Create grid with default options (100px major spacing, 2 minor divisions = 50px minor spacing)
+const grid = new Grid({
+  minorColor: "rgba(255, 255, 255, 0.1)",
+  majorColor: "rgba(255, 255, 255, 0.2)",
+  majorSpacing: 100,
+  minorDivisions: 4,
+});
+
 let anyBounced = true;
 for (let i = 0; i < 10 && anyBounced; i++) {
   anyBounced = false;
@@ -100,8 +109,15 @@ for (let i = 0; i < 10 && anyBounced; i++) {
 }
 
 const animationLoop = new AnimationLoop((deltaTimeMs: number) => {
-  context.fillStyle = "lightblue";
+  // Draw dark background
+  context.fillStyle = "#1a1a1a"; // Dark gray background
   context.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Draw grid lines
+  const canvasWidth = canvas.width / window.devicePixelRatio;
+  const canvasHeight = canvas.height / window.devicePixelRatio;
+  grid.render(context, canvasWidth, canvasHeight);
+  
   t += deltaTimeMs / 1000;
   if (t > tMax + tSpread) {
     t = -tSpread; // Reset time after one loop
