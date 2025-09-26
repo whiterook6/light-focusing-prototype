@@ -42,16 +42,16 @@ const emitter: Emitter = new LinearEmitter(
 let rays: Ray[] = [...emitter.generateRays()];
 
 const mirrors: Mirror[] = [
+  new FlatMirror({
+    position: { x: 450, y: 350 },
+    normal: { dx: 1, dy: 1 },
+    length: 200,
+  }),
   new ParabolicMirror({
     vertex: { x: 1000, y: 350 },
     focalLength: 700,
     width: 300,
     orientation: Direction.fromAngle(0),
-  }),
-  new FlatMirror({
-    position: { x: 450, y: 350 },
-    normal: { dx: 1, dy: 1 },
-    length: 200,
   }),
 ];
 
@@ -87,13 +87,6 @@ const grid = new Grid({
 // Initial ray calculation
 recalculateRays();
 
-console.log(`FromAngle: 0 => ${(Direction.fromAngle(0) * 180) / Math.PI}`);
-console.log(`FromAngle: Math.PI/2 => ${(Direction.fromAngle(Math.PI / 2) * 180) / Math.PI}`);
-console.log(`FromAngle: Math.PI => ${(Direction.fromAngle(Math.PI) * 180) / Math.PI}`);
-console.log(
-  `FromAngle: 3*Math.PI/2 => ${(Direction.fromAngle((3 * Math.PI) / 2) * 180) / Math.PI}`,
-);
-
 const animationLoop = new AnimationLoop((deltaTimeMs: number) => {
   // Draw dark background
   context.fillStyle = "#1a1a1a"; // Dark gray background
@@ -124,6 +117,22 @@ const animationLoop = new AnimationLoop((deltaTimeMs: number) => {
   }
 });
 
+
+document.getElementById("playPauseButton")?.addEventListener("click", () => {
+  animationLoop.togglePause();
+});
+document.getElementById("stepForwardButton")?.addEventListener("click", () => {
+  animationLoop.step();
+});
+document.getElementById("stepBackButton")?.addEventListener("click", () => {
+  animationLoop.stepBack();
+});
+document.getElementById("resetButton")?.addEventListener("click", () => {
+  t = 0;
+  animationLoop.start();
+});
+
+
 window.addEventListener("keydown", (event) => {
   // if space bar is pressed, toggle pause
   if (event.code === "Space") {
@@ -134,21 +143,19 @@ window.addEventListener("keydown", (event) => {
     animationLoop.stepBack();
   } else if (event.code === "ArrowLeft") {
     // Rotate mirror counterclockwise by 5 degrees
-    const mirror = mirrors[0] as ParabolicMirror;
+    const mirror = mirrors[1] as ParabolicMirror;
     const currentOrientation = mirror.orientation;
     const newOrientation = currentOrientation - (5 * Math.PI) / 180; // 5 degrees in radians
     mirror.orientation = newOrientation;
 
-    console.log(`D: ${(mirror.orientation * 180) / Math.PI}`);
     recalculateRays();
   } else if (event.code === "ArrowRight") {
     // Rotate mirror clockwise by 5 degrees
-    const mirror = mirrors[0] as ParabolicMirror;
+    const mirror = mirrors[1] as ParabolicMirror;
     const currentOrientation = mirror.orientation;
     const newOrientation = currentOrientation + (5 * Math.PI) / 180; // 5 degrees in radians
     mirror.orientation = newOrientation;
 
-    console.log(`D: ${(mirror.orientation * 180) / Math.PI}`);
     recalculateRays();
   }
 });
