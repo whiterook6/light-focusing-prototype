@@ -14,12 +14,8 @@ export class FlatMirror extends Mirror {
     this.length = length;
   }
 
-  public splitAndReflectSegment(ray: Ray): Ray[] {
-    // Mirror line: point M (mirror.position), direction D (perpendicular to mirror.normal)
-    const { origin, direction, length, timeRange, spawnedByObjectID, hitObjectID } = ray;
-    if (this.id === hitObjectID || this.id === spawnedByObjectID) {
-      return [];
-    }
+  public intersect(ray: Ray): { point: Point; distance: number } | null {
+    const { origin, direction, length } = ray;
 
     // Compute segment endpoints
     const x1 = origin.x;
@@ -35,32 +31,26 @@ export class FlatMirror extends Mirror {
     // Segment: P = (x1, y1) + t * ((x2-x1), (y2-y1)), t in [0,1]
     // Mirror: Q = M + s * D
 
-    // Solve for intersection:
     const segDx = x2 - x1;
     const segDy = y2 - y1;
-
-    // Set up equations:
-    // x1 + t*segDx = M.x + s*D.dx
-    // y1 + t*segDy = M.y + s*D.dy
-    // Solve for t and s
 
     const det = segDx * D.dy - segDy * D.dx;
     if (Math.abs(det) < 1e-8) {
       // Parallel, no intersection
-      return [ray];
+      return null;
     }
 
     const t = ((M.x - x1) * D.dy - (M.y - y1) * D.dx) / det;
     if (t < 0 || t > 1) {
       // Intersection not within segment
-      return [ray];
+      return null;
     }
 
     // Intersection point
     const ix = x1 + t * segDx;
     const iy = y1 + t * segDy;
 
-    // Mirror direction vector (already normalized in render)
+    // Mirror direction vector normalized
     const mirrorDirLen = Math.hypot(D.dx, D.dy);
     const dirX = D.dx / mirrorDirLen;
     const dirY = D.dy / mirrorDirLen;
@@ -69,23 +59,41 @@ export class FlatMirror extends Mirror {
     const vix = ix - M.x;
     const viy = iy - M.y;
 
-    // Project onto mirror direction
+    // Project onto mirror direction and check within bounds
     const proj = vix * dirX + viy * dirY;
-
-    // Check if within mirror bounds
     if (proj < -this.length / 2 || proj > this.length / 2) {
-      // Intersection is outside the mirror segment
+      return null;
+    }
+
+    return { point: { x: ix, y: iy }, distance: t * length };
+  }
+
+  public splitAndReflectSegment(ray: Ray): Ray[] {
+    // Mirror line: point M (mirror.position), direction D (perpendicular to mirror.normal)
+    const { origin, direction, length, timeRange, spawnedByObjectID, hitObjectID } = ray;
+    if (this.id === hitObjectID || this.id === spawnedByObjectID) {
+      return [];
+    }
+
+    const hit = this.intersect(ray);
+    if (!hit) {
       return [ray];
     }
 
+    const { point, distance } = hit;
+    const ix = point.x;
+    const iy = point.y;
+    const x1 = origin.x;
+    const y1 = origin.y;
+
     // Before intersection
-    const beforeLength = Math.hypot(ix - x1, iy - y1);
+    const beforeLength = distance;
     const beforeDirection = Math.atan2(iy - y1, ix - x1);
     const before = new Ray(
       { x: x1, y: y1 },
       beforeDirection,
       beforeLength,
-      { start: timeRange.start, end: timeRange.start + t * (timeRange.end - timeRange.start) },
+      { start: timeRange.start, end: timeRange.start + (distance / length) * (timeRange.end - timeRange.start) },
       "red", // color
       spawnedByObjectID,
       this.id,
@@ -93,7 +101,10 @@ export class FlatMirror extends Mirror {
 
     // After intersection: reflect (ix,iy)-(x2,y2) about mirror normal
     // Compute incident vector
-    const incident = { dx: x2 - ix, dy: y2 - iy };
+    const incident = {
+      dx: Math.cos(direction) * (length - distance),
+      dy: Math.sin(direction) * (length - distance),
+    };
     // Normalize mirror normal
     const nLen = Math.hypot(this.normal.dx, this.normal.dy);
     const nx = this.normal.dx / nLen;
@@ -109,7 +120,7 @@ export class FlatMirror extends Mirror {
       { x: ix, y: iy },
       afterDirection,
       afterLength,
-      { start: timeRange.start + t * (timeRange.end - timeRange.start), end: timeRange.end },
+      { start: timeRange.start + (distance / length) * (timeRange.end - timeRange.start), end: timeRange.end },
       "red", // color
       this.id,
     );

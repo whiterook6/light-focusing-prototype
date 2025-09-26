@@ -243,6 +243,15 @@ export class ParabolicMirror extends Mirror {
     };
   }
 
+  public intersect(ray: Ray): { point: Point; distance: number } | null {
+    const intersection = this.findIntersection(ray);
+    if (!intersection) return null;
+    return {
+      point: { x: intersection.x, y: intersection.y },
+      distance: intersection.tFraction * ray.length,
+    };
+  }
+
   public splitAndReflectSegment(ray: Ray): Ray[] {
     const { origin, direction, length, timeRange, spawnedByObjectID, hitObjectID } = ray;
 
@@ -250,15 +259,17 @@ export class ParabolicMirror extends Mirror {
       return [];
     }
 
-    const intersection = this.findIntersection(ray);
-    if (!intersection) {
+    const hit = this.intersect(ray);
+    if (!hit) {
       return [ray]; // No intersection
     }
 
-    const { x: ix, y: iy, tFraction } = intersection;
+    const { point, distance } = hit;
+    const ix = point.x;
+    const iy = point.y;
 
     // Create ray segment before intersection
-    const beforeLength = Math.hypot(ix - origin.x, iy - origin.y);
+    const beforeLength = distance;
     const beforeDirection = Math.atan2(iy - origin.y, ix - origin.x);
     const before = new Ray(
       { x: origin.x, y: origin.y },
@@ -266,7 +277,7 @@ export class ParabolicMirror extends Mirror {
       beforeLength,
       {
         start: timeRange.start,
-        end: timeRange.start + tFraction * (timeRange.end - timeRange.start),
+        end: timeRange.start + (distance / length) * (timeRange.end - timeRange.start),
       },
       ray.color,
       ray.spawnedByObjectID,
@@ -295,13 +306,13 @@ export class ParabolicMirror extends Mirror {
     const localReflectedDirection = Math.atan2(localReflected.dy, localReflected.dx);
     const worldReflectedDirection = this.localDirectionToWorld(localReflectedDirection);
 
-    const afterLength = (1 - tFraction) * length;
+    const afterLength = length - distance;
     const after = new Ray(
       { x: ix, y: iy },
       worldReflectedDirection,
       afterLength,
       {
-        start: timeRange.start + tFraction * (timeRange.end - timeRange.start),
+        start: timeRange.start + (distance / length) * (timeRange.end - timeRange.start),
         end: timeRange.end,
       },
       ray.color,
