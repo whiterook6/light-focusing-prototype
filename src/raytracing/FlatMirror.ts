@@ -7,16 +7,14 @@ export class FlatMirror extends Mirror {
   normal: Normal;
   length: number; // half width on either side of the center point
 
-  constructor({position, normal, length}: {position: Point, normal: Normal, length: number}){
+  constructor({ position, normal, length }: { position: Point; normal: Normal; length: number }) {
     super();
     this.position = position;
     this.normal = normal;
     this.length = length;
   }
 
-  public splitAndReflectSegment(
-    ray: Ray
-  ): Ray[] {
+  public splitAndReflectSegment(ray: Ray): Ray[] {
     // Mirror line: point M (mirror.position), direction D (perpendicular to mirror.normal)
     const { origin, direction, length, timeRange, spawnedByObjectID, hitObjectID } = ray;
     if (this.id === hitObjectID || this.id === spawnedByObjectID) {
@@ -52,8 +50,7 @@ export class FlatMirror extends Mirror {
       return [ray];
     }
 
-    const t =
-      ((M.x - x1) * D.dy - (M.y - y1) * D.dx) / det;
+    const t = ((M.x - x1) * D.dy - (M.y - y1) * D.dx) / det;
     if (t < 0 || t > 1) {
       // Intersection not within segment
       return [ray];
@@ -90,7 +87,7 @@ export class FlatMirror extends Mirror {
       beforeLength,
       { start: timeRange.start, end: timeRange.start + t * (timeRange.end - timeRange.start) },
       spawnedByObjectID,
-      this.id
+      this.id,
     );
 
     // After intersection: reflect (ix,iy)-(x2,y2) about mirror normal
@@ -112,13 +109,13 @@ export class FlatMirror extends Mirror {
       afterDirection,
       afterLength,
       { start: timeRange.start + t * (timeRange.end - timeRange.start), end: timeRange.end },
-      this.id
+      this.id,
     );
 
     return [before, after];
   }
 
-  render(context: CanvasRenderingContext2D){
+  render(context: CanvasRenderingContext2D) {
     // Perpendicular direction to normal
     const perpDx = -this.normal.dy;
     const perpDy = this.normal.dx;

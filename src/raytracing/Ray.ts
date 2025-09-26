@@ -8,15 +8,18 @@ export class Ray {
     public length: number,
     public timeRange: TimeRange,
     public spawnedByObjectID?: ID,
-    public hitObjectID?: ID
+    public hitObjectID?: ID,
   ) {}
 
-  private lerpT = (t: number) => (t - this.timeRange.start) / (this.timeRange.end - this.timeRange.start);
+  private lerpT = (t: number) =>
+    (t - this.timeRange.start) / (this.timeRange.end - this.timeRange.start);
 
   /**
    * Returns the segment to render for the given render time range, or null if out of bounds.
    */
-  getRenderSegment(renderRange: TimeRange): { xStart: number; yStart: number; xEnd: number; yEnd: number } | null {
+  getRenderSegment(
+    renderRange: TimeRange,
+  ): { xStart: number; yStart: number; xEnd: number; yEnd: number } | null {
     if (renderRange.start > this.timeRange.end || renderRange.end < this.timeRange.start) {
       return null; // Outside the segment's time range
     }

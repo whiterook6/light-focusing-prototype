@@ -8,7 +8,6 @@ export abstract class Mirror {
     this.id = UniqueID.getNextID();
   }
 
-
   /**
    * Splits a line segment by a mirror and returns the before and after (reflected) segments.
    * If no intersection, it returns an empty array

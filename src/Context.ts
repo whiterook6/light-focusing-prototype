@@ -7,7 +7,7 @@ export const getCanvas = (id: string): HTMLCanvasElement => {
 };
 
 export const getCanvasContext = (canvas: HTMLCanvasElement): CanvasRenderingContext2D => {
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   if (!ctx) {
     throw new Error("Cannot get canvas context");
   }
