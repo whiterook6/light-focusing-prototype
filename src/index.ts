@@ -28,18 +28,43 @@ let t = 0;
 const tMax = 3;
 const tSpread = 0.05; // draw 1/20th on either side of the T point
 
-const emitter: Emitter = new LinearEmitter(
-  { x: 100, y: 200 },
-  { x: 100, y: 500 },
-  0,
-  50,
-  3000,
-  { start: 0, end: tMax },
-  "red",
-);
+const emitters: Emitter[] = [
+  new LinearEmitter(
+    { x: 100, y: 200 },
+    { x: 100, y: 500 },
+    0,
+    50,
+    3000,
+    { start: 0, end: tMax },
+    "red",
+  ), new LinearEmitter(
+    { x: 100, y: 195 },
+    { x: 100, y: 495 },
+    -0.01,
+    50,
+    3000,
+    { start: 0, end: tMax },
+    "green",
+  ), new LinearEmitter(
+    { x: 100, y: 205 },
+    { x: 100, y: 505 },
+    0.01,
+    50,
+    3000,
+    { start: 0, end: tMax },
+    "blue",
+  )
+];
 
 // Generate rays from emitters
-let rays: Ray[] = [...emitter.generateRays()];
+let rays: Ray[];
+
+const parabolicMirror = new ParabolicMirror({
+  vertex: { x: 1000, y: 350 },
+  focalLength: 700,
+  width: 300,
+  orientation: Direction.LEFT,
+});
 
 const mirrors: Mirror[] = [
   new FlatMirror({
@@ -47,17 +72,12 @@ const mirrors: Mirror[] = [
     normal: { dx: 1, dy: 1 },
     length: 200,
   }),
-  new ParabolicMirror({
-    vertex: { x: 1000, y: 350 },
-    focalLength: 700,
-    width: 300,
-    orientation: Direction.fromAngle(0),
-  }),
+  parabolicMirror
 ];
 
 // Function to recalculate rays when mirror orientation changes
 function recalculateRays() {
-  rays = [...emitter.generateRays()];
+  rays = emitters.flatMap(emitter => emitter.generateRays());
 
 	let anyBounced = true;
 	for (let i = 0; i < 10 && anyBounced; i++) {
@@ -108,7 +128,7 @@ const animationLoop = new AnimationLoop((deltaTimeMs: number) => {
   const canvasHeight = canvas.height / window.devicePixelRatio;
   grid.render(context, canvasWidth, canvasHeight);
 
-  emitter.render(context);
+  emitters.forEach(emitter => emitter.render(context));
 
   t += deltaTimeMs / 1000;
   if (t > tMax + tSpread) {
@@ -154,18 +174,17 @@ window.addEventListener("keydown", (event) => {
     animationLoop.stepBack();
   } else if (event.code === "ArrowLeft") {
     // Rotate mirror counterclockwise by 5 degrees
-    const mirror = mirrors[1] as ParabolicMirror;
-    const currentOrientation = mirror.orientation;
+    const currentOrientation = parabolicMirror.orientation;
     const newOrientation = currentOrientation - (5 * Math.PI) / 180; // 5 degrees in radians
-    mirror.orientation = newOrientation;
+    parabolicMirror.orientation = newOrientation;
 
     recalculateRays();
   } else if (event.code === "ArrowRight") {
     // Rotate mirror clockwise by 5 degrees
-    const mirror = mirrors[1] as ParabolicMirror;
-    const currentOrientation = mirror.orientation;
+    
+    const currentOrientation = parabolicMirror.orientation;
     const newOrientation = currentOrientation + (5 * Math.PI) / 180; // 5 degrees in radians
-    mirror.orientation = newOrientation;
+    parabolicMirror.orientation = newOrientation;
 
     recalculateRays();
   }
