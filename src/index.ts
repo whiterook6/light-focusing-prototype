@@ -59,21 +59,32 @@ const mirrors: Mirror[] = [
 function recalculateRays() {
   rays = [...emitter.generateRays()];
 
-  let anyBounced = true;
-  for (let i = 0; i < 10 && anyBounced; i++) {
-    anyBounced = false;
-    for (const mirror of mirrors) {
-      rays = rays.flatMap((ray) => {
-        const newRaysFromThisMirror = mirror.splitAndReflectSegment(ray);
-        if (newRaysFromThisMirror.length > 0) {
-          anyBounced = true;
-          return newRaysFromThisMirror;
-        } else {
-          return [ray];
-        }
-      });
-    }
-  }
+	let anyBounced = true;
+	for (let i = 0; i < 10 && anyBounced; i++) {
+		anyBounced = false;
+		const nextRays: Ray[] = [];
+		for (const ray of rays) {
+			let closestMirror: Mirror | null = null;
+			let closestDistance = Infinity;
+			for (const mirror of mirrors) {
+				const d = mirror.distanceToIntersection(ray);
+				if (d < closestDistance) {
+					closestDistance = d;
+					closestMirror = mirror;
+				}
+			}
+			if (closestMirror && Number.isFinite(closestDistance)) {
+				const split = closestMirror.splitAndReflectSegment(ray);
+				if (split.length > 0) {
+					nextRays.push(...split);
+					anyBounced = true;
+					continue;
+				}
+			}
+			nextRays.push(ray);
+		}
+		rays = nextRays;
+	}
 }
 
 // Create grid with default options (100px major spacing, 2 minor divisions = 50px minor spacing)
