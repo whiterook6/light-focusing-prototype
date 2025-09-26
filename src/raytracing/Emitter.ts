@@ -7,9 +7,11 @@ import { TimeRange } from "../types";
  */
 export abstract class Emitter {
   protected timeRange: TimeRange;
+  protected color: string;
 
-  constructor(timeRange: TimeRange) {
+  constructor(timeRange: TimeRange, color: string = "red") {
     this.timeRange = timeRange;
+    this.color = color;
   }
 
   /**
@@ -31,4 +33,24 @@ export abstract class Emitter {
   getTimeRange(): TimeRange {
     return this.timeRange;
   }
+
+  /**
+   * Set the color for this emitter.
+   */
+  setColor(color: string): void {
+    this.color = color;
+  }
+
+  /**
+   * Get the current color.
+   */
+  getColor(): string {
+    return this.color;
+  }
+
+  /**
+   * Render the emitter visually.
+   * Must be implemented by subclasses to define specific rendering behavior.
+   */
+  abstract render(context: CanvasRenderingContext2D): void;
 }

@@ -7,6 +7,7 @@ export class Ray {
     public direction: number,
     public length: number,
     public timeRange: TimeRange,
+    public color: string = "red",
     public spawnedByObjectID?: ID,
     public hitObjectID?: ID,
   ) {}
@@ -37,9 +38,19 @@ export class Ray {
   render(context: CanvasRenderingContext2D, renderRange: TimeRange) {
     const segment = this.getRenderSegment(renderRange);
     if (!segment) return;
+
+    // Save current stroke style
+    const originalStrokeStyle = context.strokeStyle;
+
+    // Set ray color
+    context.strokeStyle = this.color;
+
     context.beginPath();
     context.moveTo(segment.xStart, segment.yStart);
     context.lineTo(segment.xEnd, segment.yEnd);
     context.stroke();
+
+    // Restore original stroke style
+    context.strokeStyle = originalStrokeStyle;
   }
 }

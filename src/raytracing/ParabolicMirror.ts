@@ -4,9 +4,9 @@ import { Mirror } from "./Mirror";
 
 export class ParabolicMirror extends Mirror {
   // Parabola parameters: y = a*x^2 + b*x + c
-  a: number;  // curvature coefficient
-  b: number;  // linear coefficient  
-  c: number;  // constant term
+  a: number; // curvature coefficient
+  b: number; // linear coefficient
+  c: number; // constant term
   xMin: number; // left boundary
   xMax: number; // right boundary
   vertex: Point; // vertex of the parabola
@@ -16,7 +16,7 @@ export class ParabolicMirror extends Mirror {
     vertex,
     focalLength,
     width,
-    orientation = 0 // rotation angle in radians
+    orientation = 0, // rotation angle in radians
   }: {
     vertex: Point;
     focalLength: number;
@@ -24,16 +24,16 @@ export class ParabolicMirror extends Mirror {
     orientation?: number;
   }) {
     super();
-    
+
     this.vertex = vertex;
     this.orientation = orientation;
-    
+
     // For a parabola with vertex at origin: y = (1/4f) * x^2
     // where f is focal length
     this.a = 1 / (4 * focalLength);
     this.b = 0;
     this.c = 0;
-    
+
     // Set boundaries
     this.xMin = -width / 2;
     this.xMax = width / 2;
@@ -46,16 +46,16 @@ export class ParabolicMirror extends Mirror {
     // Translate to vertex
     const translated = {
       x: worldPoint.x - this.vertex.x,
-      y: worldPoint.y - this.vertex.y
+      y: worldPoint.y - this.vertex.y,
     };
-    
+
     // Rotate by -orientation to get to local coordinates
     const cos = Math.cos(-this.orientation);
     const sin = Math.sin(-this.orientation);
-    
+
     return {
       x: translated.x * cos - translated.y * sin,
-      y: translated.x * sin + translated.y * cos
+      y: translated.x * sin + translated.y * cos,
     };
   }
 
@@ -66,16 +66,16 @@ export class ParabolicMirror extends Mirror {
     // Rotate by orientation to get to world orientation
     const cos = Math.cos(this.orientation);
     const sin = Math.sin(this.orientation);
-    
+
     const rotated = {
       x: localPoint.x * cos - localPoint.y * sin,
-      y: localPoint.x * sin + localPoint.y * cos
+      y: localPoint.x * sin + localPoint.y * cos,
     };
-    
+
     // Translate from vertex
     return {
       x: rotated.x + this.vertex.x,
-      y: rotated.y + this.vertex.y
+      y: rotated.y + this.vertex.y,
     };
   }
 
@@ -115,12 +115,12 @@ export class ParabolicMirror extends Mirror {
     // Normal vector perpendicular to tangent: (-slope, 1)
     const normalX = -slope;
     const normalY = 1;
-    
+
     // Normalize
     const length = Math.hypot(normalX, normalY);
     return {
       dx: normalX / length,
-      dy: normalY / length
+      dy: normalY / length,
     };
   }
 
@@ -129,36 +129,36 @@ export class ParabolicMirror extends Mirror {
    */
   private findIntersection(ray: Ray): { x: number; y: number; tFraction: number } | null {
     const { origin, direction, length } = ray;
-    
+
     // Transform ray to parabola's local coordinate system
     const localOrigin = this.worldToLocal(origin);
     const localDirection = this.worldDirectionToLocal(direction);
     const dx = Math.cos(localDirection);
     const dy = Math.sin(localDirection);
-    
+
     const x0 = localOrigin.x;
     const y0 = localOrigin.y;
-    
+
     // Ray parametric equation: x = x0 + t*dx, y = y0 + t*dy
     // Parabola equation: y = a*x^2 + b*x + c
-    
+
     // Substitute ray into parabola equation:
     // y0 + t*dy = a*(x0 + t*dx)^2 + b*(x0 + t*dx) + c
     // y0 + t*dy = a*(x0^2 + 2*x0*t*dx + t^2*dx^2) + b*(x0 + t*dx) + c
     // y0 + t*dy = a*x0^2 + 2*a*x0*t*dx + a*t^2*dx^2 + b*x0 + b*t*dx + c
-    
+
     // Rearrange to quadratic form: At^2 + Bt + C = 0
     const A = this.a * dx * dx;
     const B = 2 * this.a * x0 * dx + this.b * dx - dy;
     const C = this.a * x0 * x0 + this.b * x0 + this.c - y0;
-    
+
     // Solve quadratic equation
     const discriminant = B * B - 4 * A * C;
-    
+
     if (discriminant < 0) {
       return null; // No real solutions
     }
-    
+
     if (Math.abs(A) < 1e-10) {
       // Linear case (shouldn't happen for parabola, but handle gracefully)
       if (Math.abs(B) < 1e-10) {
@@ -172,58 +172,58 @@ export class ParabolicMirror extends Mirror {
       }
       return null;
     }
-    
+
     // Two solutions
     const sqrtDisc = Math.sqrt(discriminant);
     const s1 = (-B + sqrtDisc) / (2 * A); // distances along the ray
     const s2 = (-B - sqrtDisc) / (2 * A);
-    
+
     // Find the smallest positive t within ray length
     let validS: number | null = null;
-    
+
     if (s1 > 0 && s1 <= length) {
       validS = s1;
     }
     if (s2 > 0 && s2 <= length && (validS === null || s2 < validS)) {
       validS = s2;
     }
-    
+
     if (validS === null) {
       return null;
     }
-    
+
     const localX = x0 + validS * dx;
     const localY = y0 + validS * dy;
-    
+
     // Check if intersection is within parabola bounds
     if (localX < this.xMin || localX > this.xMax) {
       return null;
     }
-    
+
     // Transform intersection point back to world coordinates
     const worldIntersection = this.localToWorld({ x: localX, y: localY });
-    
-    return { 
-      x: worldIntersection.x, 
-      y: worldIntersection.y, 
-      tFraction: validS / length 
+
+    return {
+      x: worldIntersection.x,
+      y: worldIntersection.y,
+      tFraction: validS / length,
     };
   }
 
   public splitAndReflectSegment(ray: Ray): Ray[] {
     const { origin, direction, length, timeRange, spawnedByObjectID, hitObjectID } = ray;
-    
+
     if (this.id === hitObjectID || this.id === spawnedByObjectID) {
       return [];
     }
-    
+
     const intersection = this.findIntersection(ray);
     if (!intersection) {
       return [ray]; // No intersection
     }
-    
+
     const { x: ix, y: iy, tFraction } = intersection;
-    
+
     // Create ray segment before intersection
     const beforeLength = Math.hypot(ix - origin.x, iy - origin.y);
     const beforeDirection = Math.atan2(iy - origin.y, ix - origin.x);
@@ -231,48 +231,50 @@ export class ParabolicMirror extends Mirror {
       { x: origin.x, y: origin.y },
       beforeDirection,
       beforeLength,
-      { 
-        start: timeRange.start, 
-        end: timeRange.start + tFraction * (timeRange.end - timeRange.start) 
+      {
+        start: timeRange.start,
+        end: timeRange.start + tFraction * (timeRange.end - timeRange.start),
       },
-      spawnedByObjectID,
+      ray.color,
+      ray.spawnedByObjectID,
       this.id,
     );
-    
+
     // Calculate reflection in local coordinate system
     const localIntersection = this.worldToLocal({ x: ix, y: iy });
     const localNormal = this.getNormal(localIntersection.x);
-    
+
     // Transform incident direction to local coordinates
     const localIncidentDirection = this.worldDirectionToLocal(direction);
     const localIncident = {
       dx: Math.cos(localIncidentDirection),
-      dy: Math.sin(localIncidentDirection)
+      dy: Math.sin(localIncidentDirection),
     };
-    
+
     // Reflect in local coordinates: R = I - 2*(I·N)*N
     const dot = localIncident.dx * localNormal.dx + localIncident.dy * localNormal.dy;
     const localReflected = {
       dx: localIncident.dx - 2 * dot * localNormal.dx,
-      dy: localIncident.dy - 2 * dot * localNormal.dy
+      dy: localIncident.dy - 2 * dot * localNormal.dy,
     };
-    
+
     // Transform reflected direction back to world coordinates
     const localReflectedDirection = Math.atan2(localReflected.dy, localReflected.dx);
     const worldReflectedDirection = this.localDirectionToWorld(localReflectedDirection);
-    
+
     const afterLength = (1 - tFraction) * length;
     const after = new Ray(
       { x: ix, y: iy },
       worldReflectedDirection,
       afterLength,
-      { 
-        start: timeRange.start + tFraction * (timeRange.end - timeRange.start), 
-        end: timeRange.end 
+      {
+        start: timeRange.start + tFraction * (timeRange.end - timeRange.start),
+        end: timeRange.end,
       },
+      ray.color,
       this.id,
     );
-    
+
     return [before, after];
   }
 
@@ -280,17 +282,17 @@ export class ParabolicMirror extends Mirror {
     context.strokeStyle = "darkgreen";
     context.lineWidth = 2;
     context.beginPath();
-    
+
     // Draw parabola by sampling points
     const numPoints = 100;
     const step = (this.xMax - this.xMin) / numPoints;
-    
+
     let firstPoint = true;
     for (let i = 0; i <= numPoints; i++) {
       const localX = this.xMin + i * step;
       const localY = this.getY(localX);
       const worldPoint = this.localToWorld({ x: localX, y: localY });
-      
+
       if (firstPoint) {
         context.moveTo(worldPoint.x, worldPoint.y);
         firstPoint = false;
@@ -298,9 +300,9 @@ export class ParabolicMirror extends Mirror {
         context.lineTo(worldPoint.x, worldPoint.y);
       }
     }
-    
+
     context.stroke();
-    
+
     // Draw focal point (in local coordinates, focal point is at (0, 1/(4a)))
     const localFocal = { x: 0, y: 1 / (4 * this.a) };
     const worldFocal = this.localToWorld(localFocal);

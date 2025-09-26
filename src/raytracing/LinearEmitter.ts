@@ -19,9 +19,10 @@ export class LinearEmitter extends Emitter {
     direction: number,
     rayCount: number,
     rayLength: number,
-    timeRange: TimeRange
+    timeRange: TimeRange,
+    color: string = "red",
   ) {
-    super(timeRange);
+    super(timeRange, color);
     this.startPoint = startPoint;
     this.endPoint = endPoint;
     this.direction = direction;
@@ -31,23 +32,18 @@ export class LinearEmitter extends Emitter {
 
   generateRays(): Ray[] {
     const rays: Ray[] = [];
-    
+
     for (let i = 0; i < this.rayCount; i++) {
       // Interpolate position along the line segment
       const t = i / (this.rayCount - 1);
       const x = this.startPoint.x + t * (this.endPoint.x - this.startPoint.x);
       const y = this.startPoint.y + t * (this.endPoint.y - this.startPoint.y);
-      
-      const ray = new Ray(
-        { x, y },
-        this.direction,
-        this.rayLength,
-        this.timeRange
-      );
-      
+
+      const ray = new Ray({ x, y }, this.direction, this.rayLength, this.timeRange, this.color);
+
       rays.push(ray);
     }
-    
+
     return rays;
   }
 
@@ -119,5 +115,42 @@ export class LinearEmitter extends Emitter {
    */
   getRayLength(): number {
     return this.rayLength;
+  }
+
+  /**
+   * Render the linear emitter as a colored line segment.
+   */
+  render(context: CanvasRenderingContext2D): void {
+    // Save current styles
+    const originalStrokeStyle = context.strokeStyle;
+    const originalLineWidth = context.lineWidth;
+
+    // Draw emitter as a thick colored line
+    context.strokeStyle = this.color;
+    context.lineWidth = 6;
+
+    context.beginPath();
+    context.moveTo(this.startPoint.x, this.startPoint.y);
+    context.lineTo(this.endPoint.x, this.endPoint.y);
+    context.stroke();
+
+    // Draw direction indicator (arrow)
+    const midX = (this.startPoint.x + this.endPoint.x) / 2;
+    const midY = (this.startPoint.y + this.endPoint.y) / 2;
+    const arrowLength = 15;
+    const arrowAngle = this.direction;
+
+    context.lineWidth = 3;
+    context.beginPath();
+    context.moveTo(midX, midY);
+    context.lineTo(
+      midX + Math.cos(arrowAngle) * arrowLength,
+      midY + Math.sin(arrowAngle) * arrowLength,
+    );
+    context.stroke();
+
+    // Restore original styles
+    context.strokeStyle = originalStrokeStyle;
+    context.lineWidth = originalLineWidth;
   }
 }
