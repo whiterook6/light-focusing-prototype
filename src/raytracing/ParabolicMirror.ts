@@ -286,6 +286,10 @@ export class ParabolicMirror extends Mirror {
 
     // Reflect in local coordinates: R = I - 2*(I·N)*N
     const dot = localIncident.dx * localNormal.dx + localIncident.dy * localNormal.dy;
+    // If the incident direction is aligned with the normal (back face), do not reflect
+    if (dot >= 0) {
+      return [before];
+    }
     const localReflected = {
       dx: localIncident.dx - 2 * dot * localNormal.dx,
       dy: localIncident.dy - 2 * dot * localNormal.dy,
