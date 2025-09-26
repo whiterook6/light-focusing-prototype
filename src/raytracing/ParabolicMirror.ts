@@ -26,7 +26,8 @@ export class ParabolicMirror extends Mirror {
     super();
 
     this.vertex = vertex;
-    this.orientation = orientation;
+    // Offset orientation by -π/2 so that 0 opens right, π/2 opens up, etc.
+    this.orientation = orientation - Math.PI / 2;
 
     // For a parabola with vertex at origin: y = (1/4f) * x^2
     // where f is focal length
@@ -112,15 +113,41 @@ export class ParabolicMirror extends Mirror {
    */
   private getNormal(x: number): { dx: number; dy: number } {
     const slope = this.getDerivative(x);
-    // Normal vector perpendicular to tangent: (-slope, 1)
+    
+    // For a parabola y = ax², the normal vector perpendicular to tangent is (-slope, 1)
+    // But we need to ensure it points toward the focus (inside the parabola)
+    // The focus is at (0, 1/(4a)) in local coordinates
     const normalX = -slope;
     const normalY = 1;
 
     // Normalize
     const length = Math.hypot(normalX, normalY);
+    const normalizedX = normalX / length;
+    const normalizedY = normalY / length;
+    
+    // Check if the normal points toward the focus
+    // Focus is at (0, 1/(4a)) = (0, focalLength)
+    const focalLength = 1 / (4 * this.a);
+    const pointY = this.getY(x);
+    
+    // Vector from point to focus
+    const toFocusX = 0 - x;
+    const toFocusY = focalLength - pointY;
+    
+    // Dot product of normal with vector to focus
+    const dot = normalizedX * toFocusX + normalizedY * toFocusY;
+    
+    // If dot product is negative, flip the normal
+    if (dot < 0) {
+      return {
+        dx: -normalizedX,
+        dy: -normalizedY,
+      };
+    }
+    
     return {
-      dx: normalX / length,
-      dy: normalY / length,
+      dx: normalizedX,
+      dy: normalizedY,
     };
   }
 
@@ -166,9 +193,15 @@ export class ParabolicMirror extends Mirror {
       }
       const s = -C / B; // distance along the ray
       if (s > 0 && s <= length) {
-        const x = x0 + s * dx;
-        const y = y0 + s * dy;
-        return { x: x + this.vertex.x, y: y + this.vertex.y, tFraction: s / length };
+        const localX = x0 + s * dx;
+        const localY = y0 + s * dy;
+        // Check bounds in local coordinates, consistent with quadratic branch
+        if (localX < this.xMin || localX > this.xMax) {
+          return null;
+        }
+        // Transform back to world coordinates consistently
+        const worldIntersection = this.localToWorld({ x: localX, y: localY });
+        return { x: worldIntersection.x, y: worldIntersection.y, tFraction: s / length };
       }
       return null;
     }

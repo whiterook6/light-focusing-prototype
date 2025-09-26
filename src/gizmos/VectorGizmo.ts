@@ -47,10 +47,10 @@ export class VectorGizmo {
 
   render(context: CanvasRenderingContext2D) {
     context.save();
-    context.strokeStyle = "green";
+    context.strokeStyle = "#00ff00"; // Bright green
     context.lineWidth = 2;
     context.font = "13px monospace";
-    context.fillStyle = "black";
+    context.fillStyle = "#ffffff"; // White text
 
     // Helper to draw info for a line
     const drawLineInfo = (x1: number, y1: number, x2: number, y2: number) => {

@@ -8,6 +8,8 @@ import { PointEmitter } from "./raytracing/PointEmitter";
 import { LinearEmitter } from "./raytracing/LinearEmitter";
 import { TimeRange } from "./types";
 import { Grid } from "./Grid";
+import { Emitter } from "./raytracing/Emitter";
+import { Direction } from "./helpers";
 
 const canvas = getCanvas("myCanvas");
 const context = getCanvasContext(canvas);
@@ -27,62 +29,46 @@ let t = 0;
 const tMax = 1;
 const tSpread = 0.05; // draw 1/20th on either side of the T point
 
-// Create emitters
-const pointEmitter = new PointEmitter(
-  {
-    x: canvas.width / window.devicePixelRatio / 2,
-    y: canvas.height / window.devicePixelRatio / 2,
-  },
-  100, // ray count
-  500, // ray length
+const emitter: Emitter = new LinearEmitter(
+  { x: 100, y: 200},
+  { x: 100, y: 500},
+  0,
+  50,
+  1400,
   { start: 0, end: tMax },
-  0, // start angle
-  2 * Math.PI, // end angle
-  "orange", // color
-);
-
-// Example of a linear emitter
-const linearEmitter = new LinearEmitter(
-  { x: 100, y: 100 },
-  { x: 200, y: 100 },
-  Math.PI / 2, // direction (downward)
-  20, // ray count
-  500, // ray length
-  { start: 0, end: tMax },
-  "blue", // color
+  "red",
 );
 
 // Generate rays from emitters
-let rays: Ray[] = [...pointEmitter.generateRays(), ...linearEmitter.generateRays()];
+let rays: Ray[] = [...emitter.generateRays()];
 
-const parabolicMirror = new ParabolicMirror({
-  vertex: { x: 709, y: 90 },
-  focalLength: 200,
-  width: 200,
-  orientation: Math.PI / 4, // 45 degrees rotation
-});
+const mirrors: Mirror[] = [new ParabolicMirror({
+  vertex: { x: 1000, y: 350 },
+  focalLength: 700,
+  width: 300,
+  orientation: Direction.fromAngle(0),
+})];
 
-const mirrors: Mirror[] = [
-  // new FlatMirror({
-  //   position: {
-  //     x: canvas.width / window.devicePixelRatio / 2,
-  //     y: canvas.height / window.devicePixelRatio / 3,
-  //   },
-  //   normal: { dx: Math.cos(12), dy: Math.sin(12) },
-  //   length: 200,
-  // }),
-  // new FlatMirror({
-  //   position: {
-  //     x: canvas.width / window.devicePixelRatio / 2 - 100,
-  //     y: canvas.height / window.devicePixelRatio / 3,
-  //   },
-  //   normal: { dx: Math.cos(12), dy: Math.sin(12) },
-  //   length: 200,
-  // }),
-  parabolicMirror,
-];
-
-const gizmo = new VectorGizmo(canvas);
+// Function to recalculate rays when mirror orientation changes
+function recalculateRays() {
+  rays = [...emitter.generateRays()];
+  
+  let anyBounced = true;
+  for (let i = 0; i < 10 && anyBounced; i++) {
+    anyBounced = false;
+    for (const mirror of mirrors) {
+      rays = rays.flatMap((ray) => {
+        const newRaysFromThisMirror = mirror.splitAndReflectSegment(ray);
+        if (newRaysFromThisMirror.length > 0) {
+          anyBounced = true;
+          return newRaysFromThisMirror;
+        } else {
+          return [ray];
+        }
+      });
+    }
+  }
+}
 
 // Create grid with default options (100px major spacing, 2 minor divisions = 50px minor spacing)
 const grid = new Grid({
@@ -92,21 +78,13 @@ const grid = new Grid({
   minorDivisions: 4,
 });
 
-let anyBounced = true;
-for (let i = 0; i < 10 && anyBounced; i++) {
-  anyBounced = false;
-  for (const mirror of mirrors) {
-    rays = rays.flatMap((ray) => {
-      const newRaysFromThisMirror = mirror.splitAndReflectSegment(ray);
-      if (newRaysFromThisMirror.length > 0) {
-        anyBounced = true;
-        return newRaysFromThisMirror;
-      } else {
-        return [ray];
-      }
-    });
-  }
-}
+// Initial ray calculation
+recalculateRays();
+
+console.log(`FromAngle: 0 => ${Direction.fromAngle(0) * 180 / Math.PI}`);
+console.log(`FromAngle: Math.PI/2 => ${Direction.fromAngle(Math.PI/2) * 180 / Math.PI}`);
+console.log(`FromAngle: Math.PI => ${Direction.fromAngle(Math.PI) * 180 / Math.PI}`);
+console.log(`FromAngle: 3*Math.PI/2 => ${Direction.fromAngle(3*Math.PI/2) * 180 / Math.PI}`);
 
 const animationLoop = new AnimationLoop((deltaTimeMs: number) => {
   // Draw dark background
@@ -117,6 +95,8 @@ const animationLoop = new AnimationLoop((deltaTimeMs: number) => {
   const canvasWidth = canvas.width / window.devicePixelRatio;
   const canvasHeight = canvas.height / window.devicePixelRatio;
   grid.render(context, canvasWidth, canvasHeight);
+
+  emitter.render(context);
   
   t += deltaTimeMs / 1000;
   if (t > tMax + tSpread) {
@@ -135,11 +115,6 @@ const animationLoop = new AnimationLoop((deltaTimeMs: number) => {
     mirror.render(context);
   }
 
-  // Render emitters
-  pointEmitter.render(context);
-  linearEmitter.render(context);
-
-  gizmo.render(context);
 });
 
 window.addEventListener("keydown", (event) => {
@@ -150,6 +125,24 @@ window.addEventListener("keydown", (event) => {
     animationLoop.step();
   } else if (event.code === "Comma") {
     animationLoop.stepBack();
+  } else if (event.code === "ArrowLeft") {
+    // Rotate mirror counterclockwise by 5 degrees
+    const mirror = mirrors[0] as ParabolicMirror;
+    const currentOrientation = mirror.orientation;
+    const newOrientation = currentOrientation - (5 * Math.PI / 180); // 5 degrees in radians
+    mirror.orientation = newOrientation;
+    
+    console.log(`D: ${mirror.orientation * 180 / Math.PI}`);
+    recalculateRays();
+  } else if (event.code === "ArrowRight") {
+    // Rotate mirror clockwise by 5 degrees
+    const mirror = mirrors[0] as ParabolicMirror;
+    const currentOrientation = mirror.orientation;
+    const newOrientation = currentOrientation + (5 * Math.PI / 180); // 5 degrees in radians
+    mirror.orientation = newOrientation;
+    
+    console.log(`D: ${mirror.orientation * 180 / Math.PI}`);
+    recalculateRays();
   }
 });
 
