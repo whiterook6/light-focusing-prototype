@@ -100,6 +100,10 @@ export class FlatMirror extends Mirror {
     const ny = this.normal.dy / nLen;
     // Reflect: R = I - 2*(I·N)*N
     const dot = incident.dx * nx + incident.dy * ny;
+    // If the incident direction is aligned with the normal (back face), do not reflect
+    if (dot >= 0) {
+      return [before];
+    }
     const rx = incident.dx - 2 * dot * nx;
     const ry = incident.dy - 2 * dot * ny;
 
