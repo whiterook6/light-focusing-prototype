@@ -1,6 +1,6 @@
 import { AnimationLoop } from "./animation/AnimationLoop";
 import { getCanvas, getCanvasContext } from "./Context";
-import { Optic } from "./raytracing/Mirror";
+import { Optic } from "./raytracing/Optic";
 import { ParabolicMirror } from "./raytracing/ParabolicMirror";
 import { Ray } from "./raytracing/Ray";
 import { LinearEmitter } from "./raytracing/LinearEmitter";

@@ -1,6 +1,6 @@
 import { Ray } from "./Ray";
 import { Normal, Point } from "../types";
-import { Optic } from "./Mirror";
+import { Optic } from "./Optic";
 
 export class FlatMirror extends Optic {
   position: Point;

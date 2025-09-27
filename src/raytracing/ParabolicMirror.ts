@@ -1,6 +1,6 @@
 import { Ray } from "./Ray";
 import { Point } from "../types";
-import { Optic } from "./Mirror";
+import { Optic } from "./Optic";
 
 export class ParabolicMirror extends Optic {
   // Parabola parameters: y = a*x^2 + b*x + c
