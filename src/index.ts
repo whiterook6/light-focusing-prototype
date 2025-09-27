@@ -1,6 +1,6 @@
 import { AnimationLoop } from "./animation/AnimationLoop";
 import { getCanvas, getCanvasContext } from "./Context";
-import { Mirror } from "./raytracing/Mirror";
+import { Optic } from "./raytracing/Mirror";
 import { ParabolicMirror } from "./raytracing/ParabolicMirror";
 import { Ray } from "./raytracing/Ray";
 import { LinearEmitter } from "./raytracing/LinearEmitter";
@@ -66,7 +66,7 @@ const parabolicMirror = new ParabolicMirror({
   orientation: Math.PI,
 });
 
-const mirrors: Mirror[] = [
+const mirrors: Optic[] = [
   new FlatMirror({
     position: { x: 450, y: 350 },
     normal: { dx: 1, dy: 1 },
@@ -84,7 +84,7 @@ function recalculateRays() {
 		anyBounced = false;
 		const nextRays: Ray[] = [];
 		for (const ray of rays) {
-			let closestMirror: Mirror | null = null;
+			let closestMirror: Optic | null = null;
 			let closestDistance = Infinity;
 			for (const mirror of mirrors) {
 				const d = mirror.distanceToIntersection(ray);

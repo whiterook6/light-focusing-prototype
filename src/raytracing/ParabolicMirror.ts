@@ -1,8 +1,8 @@
 import { Ray } from "./Ray";
 import { Point } from "../types";
-import { Mirror } from "./Mirror";
+import { Optic } from "./Mirror";
 
-export class ParabolicMirror extends Mirror {
+export class ParabolicMirror extends Optic {
   // Parabola parameters: y = a*x^2 + b*x + c
   a: number; // curvature coefficient
   b: number; // linear coefficient

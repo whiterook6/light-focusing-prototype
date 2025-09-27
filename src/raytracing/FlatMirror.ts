@@ -1,8 +1,8 @@
 import { Ray } from "./Ray";
 import { Normal, Point } from "../types";
-import { Mirror } from "./Mirror";
+import { Optic } from "./Mirror";
 
-export class FlatMirror extends Mirror {
+export class FlatMirror extends Optic {
   position: Point;
   normal: Normal;
   length: number; // half width on either side of the center point
@@ -178,7 +178,7 @@ export class FlatMirror extends Mirror {
     const x2 = this.position.x + dirX * halfLen;
     const y2 = this.position.y + dirY * halfLen;
 
-    context.strokeStyle = "darkblue";
+    context.strokeStyle = "yellow";
     context.beginPath();
     context.moveTo(x1, y1);
     context.lineTo(x2, y2);
